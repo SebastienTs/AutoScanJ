@@ -1,0 +1,672 @@
+import java.net.ServerSocket;
+import java.net.UnknownHostException;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.OutputStream;
+import java.util.*;
+import org.micromanager.api.AcquisitionOptions;
+import org.micromanager.navigation.*;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import ij.process.*;
+import ij.ImagePlus;
+import ij.io.FileSaver;
+import ij.*;
+
+/*************************************************************************************************/
+
+/** Camera */
+XChip = 1344;
+YChip = 1024;
+
+/** Secondary scan ROI (binning 1 coordinates system) */
+XRoi = 336;
+YRoi = 256;
+RoiWidth = 672;
+RoiHeight = 512;
+
+/** AF */
+AFEnabled = true;
+AFMode = "Auto";  /** "Manual" or "Auto" */
+AFFirstManual = true;
+/** Tested with: OughtaFocus 50/1/1/15/No/StdDev + Binning 4 */
+
+/** Channels */
+ChannelAF = "DAPI";
+String[] channelslow = {"DAPI"};
+String[] channelshigh = {"DAPI","FITC","Cy5"}; 
+
+/** Dialog box */
+gd = new ij.gui.GenericDialog("AutoScanJ");
+gd.addStringField("Scan folder: ", "E:/MMCAM");
+gd.addNumericField("NRow: ", 2, 0);
+gd.addNumericField("NCol: ", 2, 0);
+gd.addNumericField("Low pix size: ", 0.3225, 4);
+gd.addNumericField("NStep low: ", 1, 0);
+gd.addNumericField("ZStep low: ", 5, 2);
+gd.addNumericField("NStep high: ", 5, 0);
+gd.addNumericField("ZStep high: ", 0.25, 2);
+gd.showDialog();
+ScanFolder = gd.getNextString();
+NRow = (int)gd.getNextNumber();
+NCol = (int)gd.getNextNumber();
+LowPixSize = (float)gd.getNextNumber(); /** microns */
+nzStepslow = (int)gd.getNextNumber();		
+zSteplow = (float)gd.getNextNumber(); /** microns */
+nzStepshigh = (int)gd.getNextNumber();		
+zStephigh = (float)gd.getNextNumber(); /** microns */
+if (gd.wasCanceled())return; 
+
+/** Advanced parameters */
+
+/** Stage configuration */
+FlipXY = 0;
+XSign = 1;
+YSign = 1;
+
+/** Image file prefix */
+ImageName = "image";
+
+/** PRIMARY SCAN */
+/** Grid spacing (only used for AutoGrid = 0) */
+XStep = 500; /** microns */
+YStep = 500; /** microns */
+AutoGrid = 1; /** Overwrite XStep and YStep by using pixel size information */
+
+/** SECONDARY SCAN */
+/** User defined XYZ Offsets */
+xOffHigh = 0; /** microns */
+yOffHigh = 0; /** microns */
+zOffHigh = 0; /** microns */
+/** AF offset */
+zOffAF = 0; /** microns */
+
+/*************************************************************************************************/
+
+/** Initialization */
+gui.closeAllAcquisitions();
+gui.clearMessageWindow();
+boolean ExitScan = false;
+boolean AFCommand = false;
+int ScanMode = 0;
+
+/** Set primary scan configuration */
+mmc.setConfig("Camera", "PrimaryScan");
+mmc.waitForConfig("Camera", "PrimaryScan");
+mmc.setConfig("Channel", channelslow[0]);
+mmc.waitForConfig("Channel", channelslow[0]);
+
+/** Get devices */
+xystage = mmc.getXYStageDevice();
+zstage = mmc.getFocusDevice();
+
+if(FlipXY == 1)
+{
+	buf = XSign;
+	XSign = YSign;
+	YSign = XSign;
+}
+
+/** Empty string */
+String Astring = "";
+
+/** Stage XY reference */
+gd = new ij.gui.GenericDialog("Reference position"); 
+gd.addMessage("Set stage reference position numerically?");
+gd.showDialog();
+if(!(gd.wasCanceled()))
+{ 
+	xRef = mmc.getXPosition(xystage);
+	yRef = mmc.getYPosition(xystage);
+	gd = new ij.gui.GenericDialog("Stage reference position");
+	gd.addNumericField("X reference position (microns): ", xRef, 2);
+	gd.addNumericField("Y reference position (microns): ", yRef, 2);
+	gd.showDialog();
+	xRef = gd.getNextNumber();
+	yRef = gd.getNextNumber();
+	/** Round absolute stage position to closest 10 nm multiple */
+	mmc.setXYPosition(xystage,(float)Math.round(xRef*100)/100,(float)Math.round(yRef*100)/100);
+	mmc.waitForDevice(xystage);
+}
+else
+{
+	gui.enableLiveMode(true);
+	JOptionPane.showMessageDialog(null, "Position the stage at upper left corner");
+	gui.enableLiveMode(false);
+	xRef = mmc.getXPosition(xystage);
+	yRef = mmc.getYPosition(xystage);
+	/** Round absolute stage position to closest 10 nm multiple */
+	mmc.setXYPosition(xystage,(float)Math.round(xRef*100)/100,(float)Math.round(yRef*100)/100);
+	mmc.waitForDevice(xystage);
+}
+xRef = mmc.getXPosition(xystage);
+yRef = mmc.getYPosition(xystage);
+gui.message("xRef: "+xRef+"  yRef: "+yRef);
+
+/** AutoGrid */
+if(AutoGrid == 1)
+{
+	ImgWidth = mmc.getImageWidth();
+	ImgHeight = mmc.getImageHeight();
+	XStep = LowPixSize*ImgWidth;
+	YStep = LowPixSize*ImgHeight;
+}
+
+/** Reset ROI */
+Binning = Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), "Binning"));
+mmc.setROI(0,0,XChip/Binning,YChip/Binning);
+
+/** Focus map */
+zOff = new float [NCol][NRow];
+testFile = new File(ScanFolder+"/FocusMap.txt").isFile();
+if(testFile)
+{
+	gd = new ij.gui.GenericDialog("Focus Map"); 
+	gd.addMessage("Focus map already acquired, re-acquire?");
+	gd.showDialog();
+	if(!(gd.wasCanceled()))testFile = false; 
+}
+if(!testFile)
+{
+	gui.enableLiveMode(true);
+	JOptionPane.showMessageDialog(null, "Upper left corner\nPlease adjust the focus, then press OK");
+	gui.enableLiveMode(false);
+	zOff[0][0] = (float)mmc.getPosition(zstage);
+	if(NCol>1)
+	{
+		mmc.setXYPosition(xystage,xRef+(NCol-1)*XStep,yRef);
+		mmc.waitForDevice(xystage);
+		gui.enableLiveMode(true);
+		JOptionPane.showMessageDialog(null, "Upper right corner\nPlease adjust the focus, then press OK");
+		gui.enableLiveMode(false);
+		zOff[(NCol-1)][0] = (float)mmc.getPosition(zstage);
+	}
+	if(NRow>1)
+	{
+		mmc.setXYPosition(xystage,xRef,yRef+(NRow-1)*YStep);
+		mmc.waitForDevice(xystage);
+		gui.enableLiveMode(true);
+		JOptionPane.showMessageDialog(null, "Lower left corner\nPlease adjust the focus, then press OK");
+		gui.enableLiveMode(false);
+		zOff[0][(NRow-1)] = (float)mmc.getPosition(zstage);
+	}
+	if((NCol>1)&&(NRow>1))
+	{
+		mmc.setXYPosition(xystage,xRef+(NCol-1)*XStep,yRef+(NRow-1)*YStep);
+		mmc.waitForDevice(xystage);
+		gui.enableLiveMode(true);
+		JOptionPane.showMessageDialog(null, "Lower Right corner\nPlease adjust the focus, then press OK");
+		gui.enableLiveMode(false);
+		zOff[(NCol-1)][(NRow-1)] = (float)mmc.getPosition(zstage);
+	}
+	FileWriter fstream = new FileWriter(ScanFolder+"/FocusMap.txt");
+	BufferedWriter out = new BufferedWriter(fstream);
+	out.write(Float.toString(zOff[0][0])+"\n");
+	out.write(Float.toString(zOff[(NCol-1)][0])+"\n");
+	out.write(Float.toString(zOff[0][(NRow-1)])+"\n");
+	out.write(Float.toString(zOff[(NCol-1)][(NRow-1)])+"\n");
+	out.close();
+}
+else
+{
+	FileReader fr = new FileReader(ScanFolder+"/FocusMap.txt");
+	BufferedReader br = new BufferedReader(fr);
+	zOff[0][0] = Float.valueOf(br.readLine());
+	zOff[(NCol-1)][0] = Float.valueOf(br.readLine());
+	zOff[0][(NRow-1)] = Float.valueOf(br.readLine());
+	zOff[(NCol-1)][(NRow-1)] = Float.valueOf(br.readLine());
+	fr.close();
+}
+
+/** Compute and display z map */
+gui.message("Z map:");
+for(y=1;y<=NRow;y++)
+{
+	Str = "";
+	for(x=1;x<=NCol;x++)
+	{	
+		zOff[x-1][y-1] = (zOff[0][0]/((x-1+(float)1e-9)*(y-1+(float)1e-9))+zOff[0][(NRow-1)]/((x-1+(float)1e-9)*(NRow-y+(float)1e-9))+zOff[(NCol-1)][0]/((NCol-x+(float)1e-9)*(y-1+(float)1e-9))+zOff[(NCol-1)][(NRow-1)]/((NCol-x+(float)1e-9)*(NRow-y+(float)1e-9)))/(1/((x-1+(float)1e-9)*(y-1+(float)1e-9))+1/((x-1+(float)1e-9)*(NRow-y+(float)1e-9))+1/((NCol-x+(float)1e-9)*(y-1+(float)1e-9))+1/((NCol-x+(float)1e-9)*(NRow-y+(float)1e-9))); 
+		zOff[x-1][y-1] = (float)Math.round(zOff[x-1][y-1]*100)/100;
+		Str = Str + zOff[x-1][y-1] + " ";
+	}
+	gui.message(Str);
+}
+
+/** Initialize server socket */
+gd = new ij.gui.GenericDialog("Server"); 
+gd.addMessage("Initialize server?");
+gd.showDialog();
+if (gd.wasCanceled())return; 
+gui.message("Initiating server on port 8895...");
+try 
+{
+	socketServer = new ServerSocket(8895);
+} 
+catch (IOException e) 
+{
+    System.out.println("Could not start server on port 8895");
+    return;
+}
+
+/** Main loop: wait for primary/secondary scan */
+int t = 0;
+while(ExitScan == false)
+{
+gui.message("Waiting for incoming connection...");
+
+/** Wait for incoming connection */
+try 
+{
+	clientSocket = socketServer.accept();
+} 
+catch (IOException e) 
+{
+    System.out.println("Could not establish connection with client");
+    return;
+}
+
+/** Open socket streams */
+gui.message("Connection accepted (5s time out)...");
+clientSocket.setSoTimeout(5000);
+in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+/** Send welcome message to client */
+out.println("welcome");
+
+/** Store incoming CAM commands */
+String fromClient = null;
+boolean test = false;
+
+String [] CommandList = new String[4096]; /** 4096 CAM commands limit!! */
+int cntcommands = 0;
+
+while(test == false)
+{
+	try{
+		fromClient = in.readLine();
+	}
+	catch (IOException e)
+	{
+		gui.message("Connection timed out, closing socket and exiting...");
+		in.close();
+		clientSocket.close();
+		socketServer.close();
+		Thread.stop();
+	}
+	CommandList[cntcommands] = fromClient;
+	cntcommands++;
+	test = (fromClient.indexOf("end") > -1);
+	if(fromClient.indexOf("startscan") > -1)
+	{
+		ScanMode = 1;
+	}
+	if(fromClient.indexOf("startcamscan") > -1)
+	{
+		ScanMode = 2;
+	}
+	if(fromClient.indexOf("/ext:af") > -1)
+	{
+		AFCommand = true;
+	}
+	if(fromClient.indexOf("exit") > -1)
+	{
+		ExitScan = true;
+	}
+}
+
+if(ScanMode == 2)
+{
+gui.message("CAM SCAN");
+
+/** Generate TimeStamp */
+Date dateNow = new Date ();
+SimpleDateFormat formateddate = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+StringBuilder datestring = new StringBuilder( formateddate.format(dateNow) );
+	
+/** Create scan folder */
+ScanSubFolder = "scan--"+datestring.toString();	
+(new File(ScanFolder+"/"+ScanSubFolder)).mkdir();
+CAMScanSubFolder = "CAM1--"+datestring.toString();
+(new File(ScanFolder+"/"+ScanSubFolder+"/"+CAMScanSubFolder)).mkdir();
+
+/** SECONDARY SCAN */
+/** Set secondary scan configuration */
+mmc.setConfig("Camera", "SecondaryScan");
+mmc.waitForConfig("Camera", "SecondaryScan");
+mmc.setConfig("Channel", channelshigh[0]);
+mmc.waitForConfig("Channel", channelshigh[0]);
+/** Set secondary scan ROI */
+Binning = Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), "Binning"));
+mmc.setROI(XRoi/Binning,YRoi/Binning,RoiWidth/Binning,RoiHeight/Binning);
+
+/** CAM command loop */
+
+/** T filename field */
+TIndex = Astring.format("%1$04d",new Object[]{t});
+NumHitPerWell = new int[NCol][NRow];
+PosCount = 0;
+for(int i=0;i<cntcommands;i++)
+{
+	Buffer = CommandList[i];
+	if(Buffer.indexOf("add")>0) 
+	{
+		PosCount = PosCount+1;
+		gui.message("Position index: "+PosCount);
+		ind = Buffer.indexOf("wellx");
+		ind2 = Buffer.indexOf(" ",ind);
+		Strwellx = Buffer.substring(ind+6,ind2); 
+		wellx = Integer.parseInt( Strwellx );
+		ind = Buffer.indexOf("welly");
+		ind2 = Buffer.indexOf(" ",ind);
+		Strwelly = Buffer.substring(ind+6,ind2); 
+		welly = Integer.parseInt( Strwelly );
+		ind = Buffer.indexOf("dxpos");
+		ind2 = Buffer.indexOf(" ",ind);
+		Strdxpos = Buffer.substring(ind+6,ind2); 
+		dxpos = Integer.parseInt( Strdxpos );
+		ind = Buffer.indexOf("dypos");
+		Strdypos = Buffer.substring(ind+6,Buffer.length()); 
+		dypos = Integer.parseInt( Strdypos );
+	
+		/** Acquire position */
+		/** Channel loop */
+		for (int c=0; c<channelshigh.length; c++) 
+		{
+			CIndex = Astring.format("%1$02d",new Object[]{c});
+			mmc.setConfig("Channel", channelshigh[c]);
+			mmc.waitForConfig("Channel", channelshigh[c]);		
+
+			/** Compute new stage position */
+			xOffset = ((wellx-1) * XStep + dxpos*LowPixSize)*XSign;
+			yOffset = ((welly-1) * YStep + dypos*LowPixSize)*YSign;
+			if(FlipXY == 1)
+			{
+				buf = xOffset;
+				xOffset = yOffset;
+				yOffset = buf;
+			}
+			sx = xOffHigh + xRef + xOffset;
+			sy = yOffHigh + yRef + yOffset;
+			
+			/** Move stage */
+			mmc.setXYPosition(xystage,sx,sy);
+			mmc.waitForDevice(xystage);
+			
+			if((AFEnabled == true)&&(AFCommand == true)&&(c == 0))
+			{
+				/** Compute z drive central position from focus map */
+				sz = zOffHigh + zOff[(wellx-1)][(welly-1)];
+				
+				/** Move z drive */
+				mmc.setPosition(zstage,sz);
+				mmc.waitForDevice(zstage);
+
+				if(AFMode.equals("Manual")||(AFFirstManual == true))
+				{
+				/** Live mode for adjustment */
+				gui.enableLiveMode(true);
+				gd = new ij.gui.GenericDialog("Fine Focus"); 
+				gd.addMessage("Adjust the view, leave AF enabled?");
+				gd.showDialog();
+				gui.enableLiveMode(false);
+
+				if(gd.wasCanceled())AFEnabled = false;
+				
+				/** Update offsets */
+				xOffHigh = xOffHigh+mmc.getXPosition(xystage)-sx;
+				yOffHigh = yOffHigh+mmc.getYPosition(xystage)-sy;
+				zOffHigh = zOffHigh+mmc.getPosition(zstage)-sz;
+
+				AFFirstManual = false;
+				}
+				else
+				{
+				gui.message("Autofocus...");
+				mmc.setConfig("Camera", "AFScan");
+				mmc.waitForConfig("Camera", "AFScan");
+				mmc.setConfig("Channel", ChannelAF);
+				mmc.waitForConfig("Channel", ChannelAF);
+				
+				autofocus = gui.getAutofocus();
+				autofocus.fullFocus();
+				zOffAF = mmc.getPosition(zstage)-sz;
+				gui.message("Autofocus z offset: "+zOffAF);
+				
+				mmc.setConfig("Camera", "SecondaryScan");
+				mmc.waitForConfig("Camera", "SecondaryScan");
+				mmc.setConfig("Channel", channelshigh[c]);
+				mmc.waitForConfig("Channel", channelshigh[c]);
+				/** Set secondary scan ROI */
+				Binning = Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), "Binning"));
+				mmc.setROI(XRoi/Binning,YRoi/Binning,RoiWidth/Binning,RoiHeight/Binning);
+				}
+			}
+
+			/** z loop */		
+			for (int z=0; z < nzStepshigh; z++) 
+			{
+					/** Z filename field */
+					ZSliceIndex = Astring.format("%1$02d",new Object[]{z});
+				
+					/** Compute new z drive position */
+					sz = zOffAF + zOffHigh + zOff[(wellx-1)][(welly-1)] + (z-Math.floor(nzStepshigh/2)) * zStephigh;
+
+					/** Move z drive */
+					mmc.setPosition(zstage,sz);
+					mmc.waitForDevice(zstage);
+					      			
+					/** Check current stage position and display it */
+					xPosc = mmc.getXPosition(xystage);
+					yPosc = mmc.getYPosition(xystage);
+					zPosc = mmc.getPosition(zstage);
+								
+					if((z==0)&&(c==0))gui.message("Acquiring stack at frame " + t + " xPos " + xPosc + " yPos "+ yPosc+ " zPos " + zPosc);
+
+					/** Capture image */
+					mmc.snapImage();
+
+					/** Copy captured image to ImagePlus structure */
+					img = mmc.getImage();
+					width = mmc.getImageWidth();
+					height = mmc.getImageHeight();
+					byteDepth = mmc.getBytesPerPixel();
+					if (byteDepth == 1) 
+					{
+  					 ip = new ByteProcessor((int)width, (int)height);
+  					 ip.setPixels(img);
+					} 
+					else if (byteDepth==2) 
+					{
+  					    ip = new ShortProcessor((int)width, (int)height);
+   				 	 ip.setPixels(img);
+					} 
+					else 
+					{
+   					console.message("Unknown byte depth.");
+					}
+					
+					XIndex = Astring.format("%1$02d",new Object[]{wellx-1});
+					YIndex = Astring.format("%1$02d",new Object[]{welly-1});
+					if(NumHitPerWell[wellx-1][welly-1]==0)
+					{
+						FilePath = ScanFolder+"/"+ScanSubFolder+"/"+CAMScanSubFolder+"/"+ImageName+"--L0000--S00--U"+XIndex+"--V"+YIndex+"--J00--E00--O00--X00--Y00--T"+TIndex+"--Z"+ZSliceIndex+"--C"+CIndex+".ome.tif";
+					}
+					else 
+					{
+						SuppPos = Astring.format("%1$03d",new Object[]{NumHitPerWell[wellx-1][welly-1]});
+						FilePath = ScanFolder+"/"+ScanSubFolder+"/"+CAMScanSubFolder+"/"+ImageName+"--L0000--S00--U"+XIndex+"--V"+YIndex+"--J00--E00--O00--X00--Y00--T"+TIndex+"--Z"+ZSliceIndex+"--C"+CIndex+"--"+SuppPos+".ome.tif";
+					}
+					ImagePlus imp = new ImagePlus(FilePath, ip);					
+
+					/** Show the central z slice, first channel of the first 5 stacks acquired */
+					if((z==(Math.floor(nzStepshigh/2)))&&(c==0)&&(i<5))
+					{
+						ImagePlus buf = new ImagePlus(FilePath, ip);						
+						buf.show();
+					}
+					
+					/** Save image to file */
+					FileSaver fs = new FileSaver(imp);
+					fs.saveAsTiff(FilePath);
+			}
+		}
+		NumHitPerWell[wellx-1][welly-1] = NumHitPerWell[wellx-1][welly-1]+1;
+	}
+	if(IJ.altKeyDown())
+	{
+		i = cntcommands;
+		gui.message("Secondary scan aborted!");
+	}
+}
+
+/** End of scan message */
+out.println("XY scanfinished");
+
+}
+
+/** PRIMARY SCAN */
+if(ScanMode == 1)
+{
+	gui.message("PRIMARY SCAN");
+	/** Current time */
+	now = System.currentTimeMillis();
+
+	/** Generate TimeStamp */
+	Date dateNow = new Date ();
+	SimpleDateFormat formateddate = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+	StringBuilder datestring = new StringBuilder( formateddate.format(dateNow) );
+	
+	/** Create scan folder (one per timepoint) */
+	ScanSubFolder = "scan--"+datestring.toString();	
+	(new File(ScanFolder+"/"+ScanSubFolder)).mkdir();
+	TIndex = Astring.format("%1$04d",new Object[]{t});
+
+	/** Set primary scan configuration */
+	mmc.setConfig("Camera", "PrimaryScan");
+	mmc.waitForConfig("Camera", "PrimaryScan");
+	mmc.setConfig("Channel", channelslow[0]);
+	mmc.waitForConfig("Channel", channelslow[0]);
+	/** Reset ROI */
+	Binning = Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), "Binning"));
+	mmc.setROI(0,0,XChip/Binning,YChip/Binning);
+
+	for (int x=0; x < NCol; x++) 
+	{
+		/** X filename field */
+		XWellIndex = Astring.format("%1$02d",new Object[]{x});
+		for (int y=0; y < NRow; y++)
+		{
+			/** Y filename field */
+			YWellIndex = Astring.format("%1$02d",new Object[]{y});
+
+			/** Channel loop */
+			for (int c=0; c<channelslow.length; c++) 
+			{
+				/** channel filename field */
+				CIndex = Astring.format("%1$02d",new Object[]{c});
+				mmc.setConfig("Channel", channelslow[c]);
+				mmc.waitForConfig("Channel", channelslow[c]);
+				
+				/** Compute new stage position */
+				xOffset = (x * XStep)*XSign;
+				yOffset = (y * YStep)*YSign;
+				if(FlipXY == 1)
+				{
+					buf = xOffset;
+					xOffset = yOffset;
+					yOffset = buf;
+				}
+				sx = xRef + xOffset;
+				sy = yRef + yOffset;
+				
+				/** Move stage */
+				mmc.setXYPosition(xystage,sx,sy);
+				mmc.waitForDevice(xystage);	
+	
+				for (int z=0; z < nzStepslow; z++) 
+				{
+					/** z filename field */
+					ZSliceIndex = Astring.format("%1$02d",new Object[]{z});
+				
+					/** Compute new z drive position */
+					sz = zOff[x][y] + (z-Math.floor(nzStepslow/2)) * zSteplow;
+
+					/** Move z drive */
+					mmc.setPosition(zstage,sz);
+					mmc.waitForDevice(zstage);
+					      			
+					/** Check current stage position and display it */
+					xPosc = mmc.getXPosition(xystage);
+					yPosc = mmc.getYPosition(xystage);
+					zPosc = mmc.getPosition(zstage);				
+					
+					if((z==0)&&(c==0))gui.message("Acquiring stack at frame " + t + " xPos " + xPosc + " yPos "+ yPosc+ " zPos " + zPosc);
+
+					/** Capture image */
+					mmc.snapImage();
+
+					/** Copy captured image to ImagePlus structure */
+					img = mmc.getImage();
+					width = mmc.getImageWidth();
+					height = mmc.getImageHeight();
+					byteDepth = mmc.getBytesPerPixel();
+					if (byteDepth == 1) 
+					{
+  					 ip = new ByteProcessor((int)width, (int)height);
+  					 ip.setPixels(img);
+					} 
+					else if (byteDepth==2) 
+					{
+  					 	ip = new ShortProcessor((int)width, (int)height);
+   				   ip.setPixels(img);
+					} 
+					else 
+					{
+   					console.message("Unknown byte depth");
+					}
+					
+					FilePath = ScanFolder+"/"+ScanSubFolder+"/"+ImageName+"--L0000--S00--U"+XWellIndex+"--V"+YWellIndex+"--J00--E00--O00--X00--Y00--T"+TIndex+"--Z"+ZSliceIndex+"--C"+CIndex+".ome.tif";
+					ImagePlus imp = new ImagePlus(FilePath, ip);
+
+					/** Save image to file */
+					FileSaver fs = new FileSaver(imp);
+					fs.saveAsTiff(FilePath);
+				}
+			}
+		}
+	}
+
+	/** End of scan message */
+	out.println("XY scanfinished");
+}
+ /** Update time frame counter */
+if(ScanMode == 1)
+{
+	t++;
+}
+
+gui.message("Move stage to reference...");
+mmc.setXYPosition(xystage,xRef,yRef);
+mmc.waitForDevice(xystage);
+gui.message("Move Z drive to reference...");
+mmc.setPosition(zstage,zOff[0][0]);
+mmc.waitForDevice(zstage);
+
+/** Reset ROI */
+mmc.setConfig("Camera", "PrimaryScan");
+mmc.waitForConfig("Camera", "PrimaryScan");
+mmc.setConfig("Channel", channelslow[0]);
+mmc.waitForConfig("Channel", channelslow[0]);
+Binning = Integer.parseInt(mmc.getProperty(mmc.getCameraDevice(), "Binning"));
+mmc.setROI(0,0,XChip/Binning,YChip/Binning);
+
+}
+
+/** Close connection */
+gui.message("Closing socket...");
+in.close();
+clientSocket.close();
+socketServer.close();
