@@ -1,33 +1,38 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Name:	LiveSample_Tiling
-// Author: 	Sebastien Tosi (IRB/ADMCF)
-// Date:	06-10-2011	
-//		          
+// Name:		LiveSample_Tiling
+// Author: 		Sébastien Tosi (IRB/ADMCF)
+// Version: 	1.0
+//
+// Refer to FixedSample_Tiling.ijm for generic instructions and to documentation in
+// https://github.com/SebastienTs/AutoScanJ for complete instructions.
+//
+// Analysis functions stored in the file "AnalysisFunctions_Live_Tiling.ijm" 
+// in ImageJ Macros folder. 
+//          
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
+//
 // Default parameters for the microscope configuration //////////
-xyFlip = 0; // Invert x and y axis (field of view rotation > 90 degree) 
-xSign = 1; // x axis direction
-ySign = 1;  // y axis direction
-LasafIP = "127.0.0.1";
-LasafPort = 8895;
-JobHigh = "Job high";
-AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Live_Tiling.ijm";
-///// Used fro debugging with local images only /////////
-OfflineFilesPath = "..."; // Only required for debugging
-JString = "J00";
-OfflineZ = 3;
-OfflineX = 3;
-OfflineY = 2;
+xyFlip = 0; 			// Invert x and y axis (field of view rotation > 90 degree) 
+xSign = 1; 			// x axis direction
+ySign = 1;  			// y axis direction
+LasafIP = "127.0.0.1";		// Use 127.0.0.1 (local) if ImageJ run from microscope computer
+LasafPort = 8895;		// Communication port (fixed)
+JobHigh = "Job high";		// Name of the secondary job in acquisition software
+//
+///// Debugging with locally stored images /////////
+OfflineFilesPath = "E:\\PROJECTS2\\CAM\\Sample_scan";	// Update to folder with the images from the test scan
+JString = "J09";					// Make sure this string match J field in file names
+OfflineZ = 3;						// Configure to match test scan configuration
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Initialization
 run("Options...", "iterations=1 count=1 edm=Overwrite");
+AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Live_Tiling.ijm";
 
 // Store analysis functions to string
 if(File.exists(AnalysisFunctionsPath))AnalysisFunctionsFile = File.openAsString(AnalysisFunctionsPath);
-else exit("Could not find the analysis functions file,\nplease check the path to the file");
+else exit("Could not find analysis functions file\nCopy AnalysisFunctions_Live_Tiling.ijm to IJ Macros folder");
 AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 	
 // Macro parameters dialog box
@@ -36,8 +41,8 @@ Dialog.create("AutoScanJ LiveSample_Tiling");
 Dialog.addMessage("Scans");
 Dialog.addNumber("Primary scan Ncols", 3);
 Dialog.addNumber("Primary scan Nrows", 2);
-Dialog.addNumber("Max. rep. for primary scan", 10);
-Dialog.addNumber("Repetition period 1 (sec)", 5);
+Dialog.addNumber("Max. rep. for primary scan", 16);
+Dialog.addNumber("Repetition period 1 (sec)", 7);
 Dialog.addNumber("Secondary scan repetitions", 10);
 Dialog.addNumber("Repetition period 2 (sec)", 120);
 Dialog.addCheckbox("Send CAM script? If disabled, use offline mode", true);
@@ -420,14 +425,14 @@ function LiveExperimentOpener(ExpPath)
 	}
 }
 
-// Offline loading of images from a non CAM movie (for analysis function design)
+// Offline loading of images from a non CAM movie (to debug analysis function)
 function FetchNewTimePoint(ExpPath,Iter,FilesPath)
 {
 	File.makeDirectory(ExpPath+"scan_time_"+IJ.pad(d2s(Iter,0),4));
 	ScanPath = ExpPath+"scan_time_"+IJ.pad(d2s(Iter,0),4)+"\\";
-	for(i=0;i<OfflineX;i++)
+	for(i=0;i<NbWellsX;i++)
 	{
-	for(j=0;j<OfflineY;j++)
+	for(j=0;j<NbWellsY;j++)
 	{
 	for(k=0;k<OfflineZ;k++)
 	{

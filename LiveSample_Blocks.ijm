@@ -1,27 +1,30 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Name:	LiveSample_Blocks
-// Author: 	Sebastien Tosi (IRB/ADMCF)
-// Date:	10-10-2012	
+// Name:		LiveSample_Blocks
+// Author: 		Sébastien Tosi (IRB/ADMCF)
+// Version:		1.0
 //		  
-// The macro is similar to LiveSample_Tiling.ijm but it handles separate fields of view
-// independently (no tiling). It is compatible with the last option of the CAM wizard (mark
-// and find like option to set the position of the fields) or a single well with multiple
-// subpositions (XY) but not with the mutiple wells (UV) + single subposition mode.
-//        
+// This macro is similar to LiveSample_Tiling.ijm but it handles separate fields of view
+// independently (no tiling). It is compatible with the last option of the CAM wizard (set the 
+// position of the fields to monitor) but not with the mutiple wells (UV) + single subposition mode. 
+//
+// Analysis functions stored in the file "AnalysisFunctions_Live_Blocks.ijm" 
+// in ImageJ Macros folder. 
+//      
+// Refer to documentation in https://github.com/SebastienTs/AutoScanJ for complete instructions.
+//
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Default parameters for the microscope configuration //////////
-xyFlip = 0; // Invert x and y axis (field of view rotation > 90 degree) 
-xSign = 1; // x axis direction
-ySign = 1;  // y axis direction
-LasafIP = "127.0.0.1";
-LasafPort = 8895;
-JobHigh = "Job high";
-AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctionsPositions_live_Blocks.ijm";
-
+xyFlip = 0; 			// Invert x and y axis (field of view rotation > 90 degree) 
+xSign = 1; 				// x axis direction
+ySign = 1;  			// y axis direction
+LasafIP = "127.0.0.1";	// Use 127.0.0.1 (local) if ImageJ run from microscope computer
+LasafPort = 8895;		// Communication port (fixed)
+JobHigh = "Job high";	// Name of the secondary job in acquisition software
+//
 //// Offline debugging only /////////////////////////////////////////////////////////////////////
-OfflineFilesPath = "..."
+OfflineFilesPath = "...";
 OfflineExpPath = "...";
 JString = "J07";
 OfflineX = 4;
@@ -32,6 +35,7 @@ StartDebug = 0; // Starting time
 
 // Initialization
 run("Options...", "iterations=1 count=1 edm=Overwrite");
+AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctionsPositions_live_Blocks.ijm";
 
 // Store analysis functions to string
 if(File.exists(AnalysisFunctionsPath))AnalysisFunctionsFile = File.openAsString(AnalysisFunctionsPath);

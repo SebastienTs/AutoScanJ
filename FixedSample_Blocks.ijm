@@ -1,28 +1,31 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Name:	FixedSample_Blocks
-// Author: 	Sebastien Tosi (IRB/ADMCF)
-// Date:	09-11-2012	
-//			   
-// Similar to FixedSample_Tiling but the wells (UV) are opened independently.
-// For each well all the subpositions (XY) are opened and tiled before being processed sequentially 
-// to find targets. A single high resolution scan is triggered 
-// once the grid of wells defined in the dialog box has been completely processed. 
-// Possible application: Cytoo chip scan.
-//
-// SP5 config:          	xyFlip = 1 xSign = -1 ySign = 1
-// Micro-Manager config:     	xyFlip = 0 xsign = 1 ySign = 1
+// Name:		FixedSample_Blocks
+// Author: 		Sébastien Tosi (IRB/ADMCF)
+// Version:		1.0	
+//	
+// Refer to FixedSample_Tiling.ijm for instructions and documentation in:
+// https://github.com/SebastienTs/AutoScanJ
+//		
+// Analysis functions stored in the file "AnalysisFunctions_Fixed_Blocks.ijm" 
+// in ImageJ Macros folder. 
+//   
+// Wells (UV) are opened independently, and for each well, all the subpositions (XY) are opened 
+// and tiled before being processed sequentially to find targets.
+// A single high resolution scan is triggered once all the wells (as defined in the dialog box) 
+// have been processed.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Default parameters for the microscope configuration //////////
-xyFlip = 0; //0	
-xSign = 1; //1	
-ySign = 1;  //1	
-DefaultLasafIP = "127.0.0.1";
-DefaultLasafPort = 8895;
-DefaultJobHigh = "Job high";
+xyFlip = 0;			// Stage axis configuration
+xSign = 1;			//
+ySign = 1;			//
+LasafIP = "127.0.0.1";		// Use 127.0.0.1 (local) if ImageJ run from microscope computer
+LasafPort = 8895;		// Communication port (fixed)
+JobHigh = "Job high";		// Name of the secondary job in acquisition software
 AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Fixed_Blocks.ijm";
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Initialization
@@ -38,9 +41,9 @@ AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 ExpPath = getDirectory("Path to the LASAF experiment folder");
 Dialog.create("FixedSample_Blocks setup");
 Dialog.addMessage("Server configuration");
-Dialog.addString("Server IP", DefaultLasafIP);
-Dialog.addNumber("Server port", DefaultLasafPort);
-Dialog.addString("Name of job for high resolution scan", DefaultJobHigh);
+Dialog.addString("Server IP", LasafIP);
+Dialog.addNumber("Server port", LasafPort);
+Dialog.addString("Name of job for high resolution scan", JobHigh);
 Dialog.addMessage("Scans");
 Dialog.addCheckbox("Perform low resolution scan?", true);
 Dialog.addCheckbox("Send CAM script?", true);

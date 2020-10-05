@@ -1,15 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// None:		 Manual selection of the targets on primary scan map
+//
 // Glomerulus_detector:  Sample: Molecular probe mouse kidney section, GFP channel (first channel).
-//			    Imaging: AF performed, primary job: single slice, 20x air objective NA=0.7, zoom=1, 
-//				     pinhole=1.5 Airy, 1024x1024 pixels image
-//
-// Glomerulus_2detector: Same as before
+//			 Imaging: AF performed, primary job: single slice, 20x air objective NA=0.7, zoom=1, 
+//			 pinhole=1.5 Airy, 1024x1024 pixels image
 //  
-// Metaphase_detector: Sample: Cultured HeLa cells, DAPI channel (first channel)
-//		     Imaging: AF performed, 63x oil objective NA=1.4, zoom=1, pinhole = 1.5 Airy, 256x256 pixels image
+// Metaphase_detector: 	 Sample: Cultured HeLa cells, DAPI channel (first channel)
+//		     	 Imaging: AF performed, 63x oil objective NA=1.4, zoom=1, pinhole = 1.5 Airy, 256x256 pixels image
 //
-// MetaphaseHS3_detector:  Sample: Cultured HeLa cells, HS3-GFP channel (first channel)
-//		     Imaging: AF, 63x oil objective NA=1.4, zoom=1, pinhole = 1.5 Airy, 256x256 pixels image
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function _None(ImagesSize)
@@ -79,59 +78,6 @@ function _Glomerulus_detector(ImagesSize)
 	}
 }
 
-function _Glomerulus2_detector(ImagesSize)
-{	
-	OriginalID = getImageID();
-	run("Duplicate...", "title=LowResolutionMontage");
-	run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
-	run("Set Measurements...", "area centroid shape kurtosis redirect=None decimal=2");
-
-	// If RGB only keep the first (red channel)
-	if(bitDepth()==24)
-	{
-		run("Split Channels");	
-		selectImage("LowResolutionMontage (blue)");
-		close();
-		selectImage("LowResolutionMontage (green)");
-		close();
-		selectImage("LowResolutionMontage (red)");
-	}
-	FirstChanID = getImageID();
-
-	// Glomerulus detection - Enhance non isotropic texture
-	run("FeatureJ Structure", "  smallest smoothing=0.25 integration=5");
-	run("Gaussian Blur...", "sigma=4");
-	run("8-bit");
-	// Reduce background
-	run("Subtract Background...", "rolling=50");
-	FilteredID = getImageID();
-
-	// Thresholding
-	setAutoThreshold("Moments dark");
-	run("Convert to Mask","slice");
-	run("Fill Holes");
-	//waitForUser("Initial mask");
-
-	run("Distance Map");
-	run("Invert LUT");
-	run("Find Maxima...", "noise=22 output=[Point Selection]");
-	run("Clear Results");
-	run("Measure");
-	
-	selectImage(OriginalID);
-	for(i=0;i<nResults;i++)
-	{
-		makePoint(getResult("X",i),getResult("Y",i));
-		setKeyDown("shift");
-	}
-
-	// Cleanup
-	selectImage(FirstChanID);
-	close();
-	selectImage(FilteredID);
-	close();
-}
-
 function _Metaphase_detector(ImagesSize)
 {
 	OriginalID = getImageID();
@@ -176,43 +122,6 @@ function _Metaphase_detector(ImagesSize)
 	close();
 	selectWindow("ROI Manager");
 	run("Close");
-	
-	// Display detected objects centroids
-	selectImage(OriginalID);
-	for(i=0;i<nResults;i++)
-	{
-		makePoint(getResult("X",i),getResult("Y",i));
-		setKeyDown("shift");
-	}
-	setTool("multipoint");
-}
-
-function _MetaphaseHS3_detector(ImagesSize)
-{
-	OriginalID = getImageID();
-
-	run("Duplicate...", "title=LowResolutionMontage");
-	run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");
-	run("Set Measurements...", "area centroid redirect=None decimal=2");
-
-	// If RGB only keep the first (red channel)
-	if(bitDepth()==24)
-	{
-		run("Split Channels");	
-		selectImage("LowResolutionMontage (blue)");
-		close();
-		selectImage("LowResolutionMontage (green)");
-		close();
-		selectImage("LowResolutionMontage (red)");
-	}
-	run("Despeckle");
-	run("Gaussian Blur...", "sigma=2");
-	run("Threshold...");
-	waitForUser("Adjust the threshold");
-	run("Convert to Mask");
-	run("Watershed");
-	run("Analyze Particles...", "size=25-Infinity circularity=0.00-1.00 show=Nothing display clear include");
-	close();
 	
 	// Display detected objects centroids
 	selectImage(OriginalID);

@@ -1,56 +1,55 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// Name:	FixedSample_Tiling
-// Author: 	Sebastien Tosi (IRB/ADMCF)
-// Date:	27-06-2013	
-//	
-// Pre-requisites (see documentation for more details): 
-// This macro is meant to be used either with Micro-Manager or Leica LAS AF software 
-// with matrix screener and CAM modules. It requires that the LASAF_client plugin is
-// copied to ImageJ plugins folder. The macro can be runned from any computer connected to a 
-// network from  which the server is visible. The microscope x/y references must be set 
-// identically in the LAS AF and in the macro (parameters xyFlip, xSign and ySign). It is necessary
-// to finely adjust the field of view rotation so that the borders of the image are parallel to x 
-// or y stage moves (this angle is fixed for a given microscope so that this setting as to
-// be done once for all). The experiment folder required by the macro must match the folder
-// set as the LAS AF data export. The analysis functions should be written in an external file
-// which path is properly configured in the default parameters. Timestamp naming in the matrix 
-// screener exportation options is necessary since the macro is opening the images from the 
-// last scan subfolder.  
-// 
-// Description: 
-// The macro first launches the main scan (primary scan - low resolution job) and opens the images 
-// from the experiment folder when this scan finished. 
-// The macro accepts multiple channels (up to 3) and multiple z slices but not multiple fields of 
-// view per well. The images will be displayed by RGB mixing the channels, intensity z-projecting and
-// tiling the wells according to their physical position. 
-// In the next step the user can select some points of interest to get high resolution views 
-// centered at these positions. Alternatively it is possible to use an automatic image analysis function
-// to generate these points of interest. The secondary scans made up of these views is then launched 
-// and the images can be displayed in a stack browser. The order of appearance of the images is first 
-// the well order and THEN only the order of acquisition.
-//	
-// Note: All the channels must have the same number of z planes
+// Name:		FixedSample_Tiling
+// Author: 		Sébastien Tosi (IRB/ADMCF)
+// Version:		1.0	
 //
-// IRB SP5 config:          	xyFlip = 1 xSign = -1 ySign = 1
-// IBMB AF7000 config:     	xyFlip = 0 xsign = 1 ySign = 1
+// Description:
+// This macro is meant to be used with a motorized microscope controlled by either Micro-Manager 
+// or Leica LAS AF acquisition software (+ Matrix Screener and CAM modules).
+// It first triggers the primary scan (low resolution job) as configured in the acquisition software
+// and combines the images acquired (Z-projection, tiling, merging up to 3 channels) prior to 
+// sending them to the custom analysis function. Next, the user can refine the selection of 
+// detected hits before the macro triggers secondary scans (high resolution job) at positions 
+// centred on these hits.
+//
+// Refer to documentation in https://github.com/SebastienTs/AutoScanJ for instructions
+//
+// Pre-requisites (see documentation for more details):
+// - LASAF_client.jar plugin copied to ImageJ plugins folder
+// - Analysis functions stored in the file "AnalysisFunctions_Fixed_Tiling.ijm"
+//   in ImageJ Macros folder. 
+// - X/Y parameters must match (xyFlip, xSign and ySign) as configuredm in the software 
+//	(Stage to camera / scanning head configuration)*
+// - Experiment folder must match the folder configured in Micro-Manager / LAS AF for data export 
+// - Timestamp naming should be enabled in LAS AF for correct macro operation.
+//
+// Notes:
+// - Only extensively tested with ImageJ Fiji Life-Line 2014
+// - The macro can run from any computer connected to a network from which the machine running
+//   Micro-Manager / LAS AF is visible
+// - For accurate localization of the hits, it is necessary to finely adjust field of view rotation 
+//   so that image borders are parallel to X/Y stage movements (camera / scan head tilt)
+//
+// *IRB SP5 config:       xyFlip = 1 xSign = -1 ySign = 1
+// *IBMB AF7000 config:   xyFlip = 0 xsign = 1 ySign = 1
 //		          
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Default parameters for the microscope configuration //////////
-xyFlip = 0;
-xSign = 1;	
-ySign = 1;
-LasafIP = "127.0.0.1";
-LasafPort = 8895;
-JobHigh = "Job high";
-AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Fixed_Tiling.ijm";
-Filter = 0;
+xyFlip = 0;		// Stage axis configuration
+xSign = 1;		//
+ySign = 1;		//
+LasafIP = "127.0.0.1";	// Use 127.0.0.1 (local) if ImageJ run from microscope computer
+LasafPort = 8895;	// Communication port (fixed)
+JobHigh = "Job high";	// Name of the secondary job in acquisition software
+Filter = 0;		// Optional Smooth filter
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 // Initialization
 run("Options...", "iterations=1 count=1 edm=Overwrite");
 run("Point Tool...", "mark=0 label selection=yellow");
+AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Fixed_Tiling.ijm";
 
 // Store analysis functions to string
 if(File.exists(AnalysisFunctionsPath))AnalysisFunctionsFile = File.openAsString(AnalysisFunctionsPath);
@@ -60,7 +59,6 @@ AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 // Macro parameters dialog box
 ExpPath = getDirectory("Path to the LASAF experiment folder");
 Dialog.create("AutoScanJ FixedSample_Tiling");
-Dialog.addMessage("Scans");
 Dialog.addCheckbox("Perform primary scan", true);
 Dialog.addCheckbox("Send CAM scripts (un-tick for debugging)", true);
 Dialog.addCheckbox("Micro-manager mode", true);
@@ -72,7 +70,7 @@ Dialog.addNumber("QuickView scale", 1);
 Dialog.addCheckbox("Display secondary scan images", false);
 Dialog.addMessage("Analysis");
 Dialog.addChoice("Automatic pre-analysis",AnalysisFunctions,"None");
-Dialog.addMessage("Specific modes");
+Dialog.addMessage("Special modes");
 Dialog.addCheckbox("No scan, no analysis, only open secondary scan images", false);
 Dialog.addCheckbox("No primary scan, only resend secondary scan", false);
 Dialog.show();
@@ -190,7 +188,7 @@ if((QuickView==true)&&(nResults>0))
 	run("Select None");
 	N = sqrt(nResults);
 	if(N-floor(N)>0)N=floor(N)+1;
-	if(N>1)run("Make Montage...", "columns="+d2s(N,0)+" rows="+d2s(N,0)+" scale="+d2s(QuickViewScale,0)+" first=1 last="+d2s(nResults,0)+" increment=1 border=0 font="+d2s(8*QuickViewScale,0)+" label");
+	if(N>1)run("Make Montage...", "columns="+d2s(N,0)+" rows="+d2s(N,0)+" scale="+d2s(QuickViewScale,0)+" first=1 last="+d2s(nResults,0)+" increment=1 border=0");
 	else run("Duplicate...", "title=Copy");
 	rename("QuickView");
 	QuickViewID = getImageID();
@@ -221,7 +219,7 @@ if((QuickView==true)&&(Analysis!="None")&&(nResults>0))
 		run("Channels Tool... ");
 	}
 	*/
-	waitForUser("You can remove unwanted positions on the quickview");
+	waitForUser("You can remove unwanted / duplicated targets on the Quickview\n- Alt+left clik to remove\n- Left click to add");
 	getSelectionCoordinates(xCoordinates, yCoordinates);
 	SelectionX = newArray(lengthOf(xCoordinates));
 	SelectionY = newArray(lengthOf(xCoordinates));
