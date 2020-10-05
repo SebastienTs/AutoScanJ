@@ -20,6 +20,6 @@ For fixed experiments:
 For live experiments:
 - Unzip the data that you want to test to an empty folder
 - Create an **empty** folder
-- Set the variable **OfflineFilesPath** to the path to the data folder you unzipped
+- Set the variable **OfflineFilesPath** in the IJ macro to the path to the data folder you unzipped
 - Run the corresponding IJ macro and select the empty folder as experiment folder
 - Untick "Send CAM scripts" so that the macro does not attempt to control the microscope
