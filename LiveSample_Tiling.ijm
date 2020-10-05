@@ -36,7 +36,7 @@ else exit("Could not find analysis functions file\nCopy AnalysisFunctions_Live_T
 AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 	
 // Macro parameters dialog box
-ExpPath = getDirectory("Path to the LASAF experiment folder");
+ExpPath = getDirectory("Path to the experiment folder");
 Dialog.create("AutoScanJ LiveSample_Tiling");
 Dialog.addMessage("Scans");
 Dialog.addNumber("Primary scan Ncols", 3);

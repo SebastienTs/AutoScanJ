@@ -38,7 +38,7 @@ else exit("Could not find the analysis functions file,\nplease check the path to
 AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 
 // Macro parameters dialog box
-ExpPath = getDirectory("Path to the LASAF experiment folder");
+ExpPath = getDirectory("Path to the experiment folder");
 Dialog.create("FixedSample_Blocks setup");
 Dialog.addMessage("Server configuration");
 Dialog.addString("Server IP", LasafIP);

@@ -44,7 +44,7 @@ AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 SaveChoiceMenu = newArray("Miniatures","Frames");
 	
 // Macro parameters dialog box
-ExpPath = getDirectory("Path to the LASAF experiment folder");
+ExpPath = getDirectory("Path to the experiment folder");
 Dialog.create("AutoScanJ LiveSample_Blocks");
 Dialog.addMessage("Scans");
 Dialog.addNumber("Blocks NCols", OfflineX);

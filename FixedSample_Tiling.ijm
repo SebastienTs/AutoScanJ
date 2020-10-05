@@ -57,7 +57,7 @@ else exit("Could not find the analysis functions file,\nplease check the path to
 AnalysisFunctions = RegisterFunctions(AnalysisFunctionsFile);
 
 // Macro parameters dialog box
-ExpPath = getDirectory("Path to the LASAF experiment folder");
+ExpPath = getDirectory("Path to the experiment folder");
 Dialog.create("AutoScanJ FixedSample_Tiling");
 Dialog.addCheckbox("Perform primary scan", true);
 Dialog.addCheckbox("Send CAM scripts (un-tick for debugging)", true);
