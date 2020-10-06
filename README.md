@@ -3,7 +3,7 @@
 
 ![](Robot.jpg)
 
-For an overview of the technique, refer to the article **AutoScanJ: A Suite of ImageJ Macros for Intelligent Microscopy** (to be published soon).
+For an overview of the technique, refer to the article **AutoScanJ: A Suite of ImageJ scripts for Intelligent Microscopy** (to be published soon).
 
 Software documentation for use with Micro-Manager: https://bit.ly/2tFiDyD<br/>
 software documentation for use with Leica LAS AF:  https://bit.ly/2DMxmMy<br/>
