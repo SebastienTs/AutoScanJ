@@ -14,12 +14,12 @@ Download test data here: https://bit.ly/3d25TYt
 
 For fixed experiments:
 - Unzip the data that you want to test to an empty folder
-- Run the corresponding IJ macro and select the folder you unzipped the data to as experiment folder
+- Run the corresponding ImageJ macro and select the folder you unzipped the data to as experiment folder
 - Untick "Send CAM scripts" so that the macro does not attempt to control the microscope
 
 For live experiments:
 - Unzip the data that you want to test to an empty folder
 - Create an **empty** folder
-- Set the variable **OfflineFilesPath** in the IJ macro to the path of the folder you unzipped the data to
-- Run the corresponding IJ macro and select the empty folder as experiment folder
+- Set the variable **OfflineFilesPath** in the corresponding IJ macro to the path of the folder you unzipped the data to
+- Run the ImageJ macro and select the empty folder as experiment folder
 - Untick "Send CAM scripts" so that the macro does not attempt to control the microscope
