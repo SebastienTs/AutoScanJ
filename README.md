@@ -6,7 +6,7 @@
 For an overview of the technique, refer to the article **AutoScanJ: A Suite of ImageJ scripts for Intelligent Microscopy** (to be published soon).
 
 Software documentation for use with Micro-Manager: https://bit.ly/2SyWcHS<br/>
-Doftware documentation for use with Leica LAS AF:  https://bit.ly/2GEhu4a (Procedure documented for fixed sample / tiled scan only)<br/>
+Doftware documentation for use with Leica LAS AF:  https://bit.ly/2GEhu4a (procedure documented for fixed sample / tiled scan only)<br/>
 
 Don't have a compatible microscope at hand but still want to test the macros?
 
