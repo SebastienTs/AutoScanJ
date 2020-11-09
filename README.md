@@ -12,6 +12,8 @@ Don't have a compatible microscope at hand but still want to test the macros?
 
 Download test data here: https://bit.ly/3d25TYt
 
+**Usage of the test data**
+
 For fixed experiments:
 - Unzip the data that you want to test to an empty folder
 - Run the corresponding ImageJ macro and select the folder you unzipped the data to as experiment folder
