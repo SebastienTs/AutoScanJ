@@ -3,10 +3,11 @@
 
 ![](Robot.jpg)
 
-AutoScanJ is a suite of ImageJ scripts enabling to image targets of interest by automatically driving a motorized microscope (controlled by Micro-Manager or Leica LASAF with Matrix/CAM modules) at the corresponding locations. For live samples, the software can detect biological events from their onset and sequentially image them at high resolution, an action that would be impractical by user operation. For fixed samples, the software can dramatically reduce the amount of data acquired in situations where statistically few objects of interest are observed per field of view. AutoScanJ can run directly on the microscope workstation, or on a dedicated image processing workstation connected to the same local network as the microscope workstation. In this latter case, the interaction is implemented as network socket-based messages and the images are shared by network folder (instead of a local folder). 
+AutoScanJ is a suite of ImageJ scripts enabling to image targets of interest by automatically driving a motorized microscope (controlled by Micro-Manager or Leica LASAF with Matrix/CAM modules) at the corresponding locations. For live samples, the software can detect biological events from their onset and sequentially image them at high resolution, an action that would be impractical by user operation. For fixed samples, the software can dramatically reduce the amount of data acquired in situations where statistically few objects of interest are observed per field of view. 
 
-The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy.
-For an overview of the technique, refer to the article **AutoScanJ: A Suite of ImageJ scripts for Intelligent Microscopy** (to be published soon).
+The target detection function can be simply customized in ImageJ macro language and AutoScanJ can run directly on the microscope workstation, or on a dedicated image processing workstation connected to the same local network as the microscope workstation. In this latter case, the interaction is implemented as network socket-based messages and the images are shared by network folder (instead of a local folder). 
+
+The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article **AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**.
 
 Software documentation for use with Micro-Manager: https://bit.ly/2SyWcHS<br/>
 Software documentation for use with Leica LAS AF:  https://bit.ly/2GEhu4a (procedure documented for fixed sample / tiled scan only)<br/>
