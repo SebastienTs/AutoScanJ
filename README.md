@@ -9,8 +9,9 @@ The target detection function can be simply customized in ImageJ macro language 
 
 The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article **AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**.
 
-Software documentation for use with Micro-Manager: https://bit.ly/2SyWcHS<br/>
-Software documentation for use with Leica LAS AF:  https://bit.ly/2GEhu4a (procedure documented for fixed sample only)<br/>
+Software documentation for use with Micro-Manager:  https://bit.ly/2SyWcHS<br/>
+Software documentation for use with Leica LAS AF:   https://bit.ly/2GEhu4a<br/>
+Manual to write custom  target detection functions: https://bit.ly/2LJzLPN<br/>
 
 Don't have a compatible microscope at hand but still want to test the macros?
 
