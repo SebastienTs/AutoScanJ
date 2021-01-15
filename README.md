@@ -27,7 +27,7 @@ For fixed experiments:
 - Select the Automatic pre-analysis function corresponding to the dataset you downloaded (**Glomerulus_detector** or **Metaphase_detector**)<br/>
 - Leave all other options to there default
 
-You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected.<br/>
+You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected. Pressing OK twice in the next dialog boxes will bring the expected message "The images from the CAM list cannot be found" since no secondary scan images will be acquired.<br/>
 
 For live experiments:
 - Unzip the data that you want to test to an empty folder
