@@ -42,4 +42,4 @@ You should see the primary scan map with the detected targets and the targets sh
 - Create another **empty** folder (required to empty it before each run)
 - Set the variable **OfflineFilesPath** in the corresponding IJ macro to the path of the folder you unzipped the data to
 - Run the ImageJ macro and select the empty folder as experiment folder
-- Untick "Perform primary scan" and "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
+- Untick "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
