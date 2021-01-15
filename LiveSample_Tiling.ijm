@@ -21,7 +21,7 @@ LasafPort = 8895;		// Communication port (fixed)
 JobHigh = "Job high";		// Name of the secondary job in acquisition software
 //
 ///// Debugging with locally stored images /////////
-OfflineFilesPath = "E:\\PROJECTS2\\CAM\\Sample_scan";	// Update to folder with the images from the test scan
+OfflineFilesPath = "C:\\Users\\Seb\\Desktop\\data";	// Update to folder with the images from the test scan
 JString = "J09";					// Make sure this string match J field in file names
 OfflineZ = 3;						// Configure to match test scan configuration
 ////////////////////////////////////////////////////////////////////////////////////////////////

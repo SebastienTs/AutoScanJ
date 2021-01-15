@@ -211,6 +211,7 @@ if((QuickView==true)&&(Analysis!="None")&&(nResults>0))
 		ypoints[i] = Ly*(QuickViewScale/2)+Ly*QuickViewScale*(floor(i/N));		
 	}
 	selectImage("QuickView");
+	resetMinAndMax();
 	makeSelection("point",xpoints,ypoints);
 	/*
 	if(bitDepth==24)
@@ -219,18 +220,27 @@ if((QuickView==true)&&(Analysis!="None")&&(nResults>0))
 		run("Channels Tool... ");
 	}
 	*/
-	waitForUser("You can remove unwanted / duplicated targets on the Quickview\n- Alt+left clik to remove\n- Left click to add");
-	getSelectionCoordinates(xCoordinates, yCoordinates);
-	SelectionX = newArray(lengthOf(xCoordinates));
-	SelectionY = newArray(lengthOf(xCoordinates));
-	for(i=0;i<lengthOf(xCoordinates);i++)
+	waitForUser("You can remove unwanted / duplicated targets on the Quickview\n- Alt+left clik to remove target\n- Left click to restore removed target\nDo not edit the scan map manually!");
+	selectImage("QuickView");
+	if(selectionType>-1)
 	{
-		SelectedPosition = round((xCoordinates[i]-Lx*(QuickViewScale/2))/(Lx*QuickViewScale)+N*round((yCoordinates[i]-Ly*(QuickViewScale/2))/(Ly*QuickViewScale)));
-		SelectionX[i] = OriginalXCoordinates[SelectedPosition];
-		SelectionY[i] = OriginalYCoordinates[SelectedPosition];
+		getSelectionCoordinates(xCoordinates, yCoordinates);
+		SelectionX = newArray(lengthOf(xCoordinates));
+		SelectionY = newArray(lengthOf(xCoordinates));
+		for(i=0;i<lengthOf(xCoordinates);i++)
+		{
+			SelectedPosition = round((xCoordinates[i]-Lx*(QuickViewScale/2))/(Lx*QuickViewScale)+N*round((yCoordinates[i]-Ly*(QuickViewScale/2))/(Ly*QuickViewScale)));
+			SelectionX[i] = OriginalXCoordinates[SelectedPosition];
+			SelectionY[i] = OriginalYCoordinates[SelectedPosition];
+		}
+		selectImage(MontageID);
+		makeSelection("point",SelectionX,SelectionY);
 	}
-	selectImage(MontageID);
-	makeSelection("point",SelectionX,SelectionY);
+	else
+	{
+		selectImage(MontageID);
+		run("Select None");
+	}
 }
 else waitForUser("You can now edit the selected positions:\n \n - Left click to create a new point\n - Drag a point to move it\n - Alt+ left click to remove a point\n - Zoom with shift+up/down arrows\n - Hold space and drag the view to move around\n");
 
