@@ -9,6 +9,8 @@ The target detection function can be simply customized in ImageJ macro language 
 
 The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article **AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**.
 
+**The code has only be thoroughly tested with Fiji Life-Line 02 June 2014 and Windows operating systems. The code might run with other configurations but there is no guarantee (missing plugins, file path separators). Also, as a general run when using ImageJ, you should refrain from using space separators in file and folder names.**
+
 AutoScanJ Software and Hardware Components: https://bit.ly/3nSfFAA<br/>
 Manual to write custom  target detection functions: https://bit.ly/2LJzLPN<br/>
 Software documentation for use with Micro-Manager:  https://bit.ly/2SyWcHS<br/>
