@@ -35,7 +35,7 @@ StartDebug = 0; // Starting time
 
 // Initialization
 run("Options...", "iterations=1 count=1 edm=Overwrite");
-AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctionsPositions_live_Blocks.ijm";
+AnalysisFunctionsPath = getDirectory("macros")+"AnalysisFunctions_Live_Blocks.ijm";
 
 // Store analysis functions to string
 if(File.exists(AnalysisFunctionsPath))AnalysisFunctionsFile = File.openAsString(AnalysisFunctionsPath);
