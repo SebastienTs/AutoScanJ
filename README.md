@@ -29,7 +29,7 @@ Download test data here: https://bit.ly/3d25TYt
 - Select the Automatic pre-analysis function corresponding to the dataset you downloaded (**Glomerulus_detector** or **Metaphase_detector**)<br/>
 - Leave all other options to there default
 
-You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected. Pressing OK twice in the next dialog boxes will bring the expected message "The images from the CAM list cannot be found" since no secondary scan images will be acquired.<br/>
+You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected. Pressing OK twice in the next dialog boxes will bring the expected message "The images from the CAM list cannot be found" since no secondary scan images will be acquired. In a regular experiment with microscope connected, the targets should exclusively be edited from the Quick View window (if enabled in the initial dialog box), or from the primary scan map (if Quick View is not enabled).<br/>
 
 **For Fixed + Blocks experiments:**
 - Follow the previous instruction but select the Automatic pre-analysis function **Cytoo_Isolated_Nuclei_SP5**
