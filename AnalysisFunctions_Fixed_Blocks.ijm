@@ -149,8 +149,7 @@ function _Cytoo_Isolated_Nuclei_SP5(ImagesSize,BlockXInd,BlockYInd,BlockStartRow
 	}
 	selectImage(NucleiID);
 	run("Add Image...", "image=NucleiCenters x=0 y=0 opacity=30");
-	if(DebugMode>0)waitForUser("Debug Mode: Isolated cells");
-	
+
 	// Cleanup
 	close();
 	selectImage(NucleiCentersID);
@@ -165,6 +164,8 @@ function _Cytoo_Isolated_Nuclei_SP5(ImagesSize,BlockXInd,BlockYInd,BlockStartRow
 		makePoint(ValPattPosX[i],ValPattPosY[i]);
 		setKeyDown("shift");
 	}
+	if(DebugMode>0)waitForUser("Debug Mode: Isolated cells");
+	
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
