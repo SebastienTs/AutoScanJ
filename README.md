@@ -9,6 +9,8 @@ The target detection function can be simply customized in ImageJ macro language 
 
 The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article **AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**.
 
+**The code has only be thoroughly tested with Fiji Life-Line 02 June 2014 and Windows operating systems. The code might run with other configurations but there is no guarantee (missing plugins, file path separators). Also, as a general run when using ImageJ, you should refrain from using space separators in file and folder names.**
+
 AutoScanJ Software and Hardware Components: https://bit.ly/3nSfFAA<br/>
 Manual to write custom  target detection functions: https://bit.ly/2LJzLPN<br/>
 Software documentation for use with Micro-Manager:  https://bit.ly/2SyWcHS<br/>
@@ -20,8 +22,8 @@ Download test data here: https://bit.ly/3d25TYt
 
 **Usage of the test data**
 
-For Fixed + Tiling experiments:
-- Unzip the data that you want to test to an empty folder
+**For Fixed + Tiling experiments:**
+- Unzip the data that you want to test to an **empty** folder
 - Run the corresponding ImageJ macro and select the folder you unzipped the data to as experiment folder
 - Untick "Perform primary scan" and "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
 - Select the Automatic pre-analysis function corresponding to the dataset you downloaded (**Glomerulus_detector** or **Metaphase_detector**)<br/>
@@ -29,17 +31,25 @@ For Fixed + Tiling experiments:
 
 You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected. Pressing OK twice in the next dialog boxes will bring the expected message "The images from the CAM list cannot be found" since no secondary scan images will be acquired.<br/>
 
-For Fixed + Blocks experiments:
-- Follow the prvious instruction but select the Automatic pre-analysis function **Cytoo_Isolated_Nuclei_SP5**
+**For Fixed + Blocks experiments:**
+- Follow the previous instruction but select the Automatic pre-analysis function **Cytoo_Isolated_Nuclei_SP5**
 - At the first dialog box draw a rectangular region inside the Cytoo block (that is around the inner 144 patterns with some black margin around)
 - At the next dialog box approximately circle a pattern
-- Press Ok at the dialog box "Debug mode: isolated cells"
+- Press **Ok** at the dialog box **"Debug mode: isolated cells"**
 - The isolated cells of the current block are reported as yellow crosses
-- The next three blocks can be analyzed and inspected likewise by each time pressing OK in the next dialog boxes
+- The next three blocks can be analyzed and inspected likewise by each time pressing **OK** in the next dialog boxes
 
-For live experiments:
-- Unzip the data that you want to test to an empty folder
-- Create an **empty** folder (required to empty it before each run)
+**For Live + Tiling experiments:**
+- Unzip the data that you want to test to an **empty** folder
+- Create another **empty** folder (required to empty it before each run)
 - Set the variable **OfflineFilesPath** in the corresponding IJ macro to the path of the folder you unzipped the data to
-- Run the ImageJ macro and select the empty folder as experiment folder
-- Untick "Send CAM scripts" so that the macro does not attempt to control the microscope
+- Run the ImageJ macro and select the **second empty** folder as experiment folder
+- Untick "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
+- Leave repetition period to default or increase it to larger values (e.g. 15 or 30 seconds if your computer is rather slow)
+- Leave the Automatic pre-analysis to the default **Mitosis_Microtubulin**<br/>
+
+Images from the primary scan will be pulled peridoically from the first folder and copied to the experiment folder to mimick primary scan acquisition. Mitosis detections should be detected after few frames (as yellow circles overlaid on top of the primary map). No secondary images will be acquired and displayed since there is no connection to the microscope.
+
+**For Live + Blocks experiments:**
+
+No sample data available yet.
