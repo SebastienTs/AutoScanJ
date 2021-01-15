@@ -45,7 +45,7 @@ You should see the primary scan map with the detected targets and the targets sh
 - Set the variable **OfflineFilesPath** in the corresponding IJ macro to the path of the folder you unzipped the data to
 - Run the ImageJ macro and select the **second empty** folder as experiment folder
 - Untick "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
-- Set repetition period to a short time such as 1 or 2 seconds
+- Leave repetition period to default or increase it to larger values (e.g. 15 or 30 seconds if your computer is rather slow)
 - Leave the Automatic pre-analysis to the default **Mitosis_Microtubulin**<br/>
 
-Images from the primary scan will be pulled every 7 seconds from the first folder and copied to the experiment folder. Mitosis detections will start to be detected after few frames as yellow circles overlaid on top of the primary map. No secondary images will be acquired and displayed as there is no connection to the microscope.
+Images from the primary scan will be pulled peridoically from the first folder and copied to the experiment folder to mimick primary scan acquisition. Mitosis detections should be detected after few frames (as yellow circles overlaid on top of the primary map). No secondary images will be acquired and displayed since there is no connection to the microscope.
