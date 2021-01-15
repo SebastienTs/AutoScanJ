@@ -24,7 +24,8 @@ For fixed experiments:
 - Unzip the data that you want to test to an empty folder
 - Run the corresponding ImageJ macro and select the folder you unzipped the data to as experiment folder
 - Untick "Perform primary scan" and "Send CAM scripts" so that the macro does not attempt to re-acquire primary scan image by controlling the microscope
-- Select the Automatic pre-analysis function that corresponds to the dataset (**Glomerulus_detector** or **Metaphase_detector**)<br/>
+- Select the Automatic pre-analysis function corresponding to the dataset you downloaded (**Glomerulus_detector** or **Metaphase_detector**)<br/>
+- Leave all other options to there default
 
 You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected.<br/>
 
