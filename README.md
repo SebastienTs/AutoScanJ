@@ -30,7 +30,7 @@ For Fixed + Tiling experiments:
 You should see the primary scan map with the detected targets and the targets should be montaged in the QuickView window. It is not possible to go further with this demo and acquire secondary scan images since the microscope is not connected. Pressing OK twice in the next dialog boxes will bring the expected message "The images from the CAM list cannot be found" since no secondary scan images will be acquired.<br/>
 
 For Fixed + Blocks experiments:
-- Follow the prvious instruction but select the Automatic pre-analysis function **Cytoo_lll**
+- Follow the prvious instruction but select the Automatic pre-analysis function **Cytoo_Isolated_Nuclei_SP5**
 - At the first dialog box draw a rectangular region inside the Cytoo block (that is around the inner 144 patterns with some black margin around)
 - At the next dialog box approximately circle a pattern
 - Press Ok at the dialog box "Debug mode: isolated cells"
