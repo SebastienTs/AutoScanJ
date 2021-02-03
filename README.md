@@ -7,7 +7,7 @@ AutoScanJ is a suite of ImageJ scripts enabling to image targets of interest by 
 
 The target detection function can be simply customized in ImageJ macro language and AutoScanJ can run directly on the microscope workstation, or on a dedicated image processing workstation connected to the same local network as the microscope workstation. In this latter case, the interaction is implemented as network socket-based messages and the images are shared by network folder (instead of a local folder). 
 
-The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article **AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**.
+The concept of intelligent microscopy and sample applications corresponding to the different possible scenarios (fixed/live sample and tiled/block scans) is described in detail in the article [**AutoScanJ: A Suite of ImageJ Scripts for Intelligent Microscopy**](https://www.frontiersin.org/articles/10.3389/fbinf.2021.627626/abstract).
 
 **The code has only be thoroughly tested with Fiji Life-Line 02 June 2014 and Windows operating systems. The code might run with other configurations but there is no guarantee (missing plugins, file path separators). Also, as a general run when using ImageJ, you should refrain from using space separators in file and folder names.**
 
